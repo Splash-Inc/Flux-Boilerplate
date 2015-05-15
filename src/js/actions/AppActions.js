@@ -16,10 +16,10 @@ var AppActions = {
     });
   },
 
-  addGroup: function(group) {
+  addGroup: function(groupName) {
     AppDispatcher.handleAction({
       actionType: AppConstants.ADD_GROUP,
-      message: group
+      groupName: groupName
     });
   },
   removeGroup: function(index) {
@@ -29,10 +29,10 @@ var AppActions = {
     });
   },
 
-  addUser: function(user) {
+  addUser: function(userName) {
     AppDispatcher.handleAction({
       actionType: AppConstants.ADD_USER,
-      message: user
+      userName: userName
     });
   },
   removeUser: function(index) {

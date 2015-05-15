@@ -1,12 +1,15 @@
 var React = require('react');
 
-var AppActions = require('../actions/AppActions');
-
 var MessagesSection = require('./MessagesSection/MessagesSection.react');
 var UsersSection = require('./UsersSection/UsersSection.react');
 var FormSection = require('./FormSection/FormSection.react');
+var AppActions = require('../actions/AppActions');
 
 var Chat = React.createClass({
+  componentWillMount: function() {
+    var userName = prompt('User name:');
+    AppActions.addUser(userName);
+  },
 
   render: function() {
     return (
@@ -14,14 +17,10 @@ var Chat = React.createClass({
         <div className="row">
           <MessagesSection />
           <UsersSection />
-          <FormSection addMessage={this._addMessage}/>
+          <FormSection />
         </div>
       </div>
     );
-  },
-
-  _addMessage: function(message) {
-    AppActions.addMessage(message);
   }
 });
 

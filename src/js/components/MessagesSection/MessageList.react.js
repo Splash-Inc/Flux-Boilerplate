@@ -11,21 +11,20 @@ var MessageList = React.createClass({
   },
 
   componentDidMount: function() {
-    MessageStore.addChangeListener(this._onMessagesChange);
+    MessageStore.addChangeListener(this.onMessagesChange);
   },
 
   componentWillUnmount: function() {
-    MessageStore.removeChangeListener(this._onMessagesChange);
+    MessageStore.removeChangeListener(this.onMessagesChange);
   },
 
-  getInitialStates: function() {
-    return {
-      messages: this.props.messages
-    }
+  onMessagesChange: function() {
+    this.setState({
+      messages: MessageStore.getAll()
+    })
   },
 
   render: function() {
-
     var messageListItems = this.state.messages.map(function(message) {
       return (
         <MessageItem key={message.id} user={message.authorName} message={message.text} />
@@ -39,12 +38,6 @@ var MessageList = React.createClass({
         </ul>
       </div>
     );
-  },
-
-  _onMessagesChange: function() {
-    this.setState({
-      messages: MessageStore.getAll()
-    })
   }
 });
 

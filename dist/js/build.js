@@ -20455,10 +20455,10 @@ var AppActions = {
     });
   },
 
-  addGroup: function addGroup(group) {
+  addGroup: function addGroup(groupName) {
     AppDispatcher.handleAction({
       actionType: AppConstants.ADD_GROUP,
-      message: group
+      groupName: groupName
     });
   },
   removeGroup: function removeGroup(index) {
@@ -20468,10 +20468,10 @@ var AppActions = {
     });
   },
 
-  addUser: function addUser(user) {
+  addUser: function addUser(userName) {
     AppDispatcher.handleAction({
       actionType: AppConstants.ADD_USER,
-      message: user
+      userName: userName
     });
   },
   removeUser: function removeUser(index) {
@@ -20489,20 +20489,19 @@ module.exports = AppActions;
 
 var React = require('react');
 
-var AppActions = require('../actions/AppActions');
-
 var MessagesSection = require('./MessagesSection/MessagesSection.react');
 var UsersSection = require('./UsersSection/UsersSection.react');
 var FormSection = require('./FormSection/FormSection.react');
+var AppActions = require('../actions/AppActions');
 
 var Chat = React.createClass({ displayName: 'Chat',
-
-  render: function render() {
-    return React.createElement('div', { className: 'container chat' }, React.createElement('div', { className: 'row' }, React.createElement(MessagesSection, null), React.createElement(UsersSection, null), React.createElement(FormSection, { addMessage: this._addMessage })));
+  componentWillMount: function componentWillMount() {
+    var userName = prompt('User name:');
+    AppActions.addUser(userName);
   },
 
-  _addMessage: function _addMessage(message) {
-    AppActions.addMessage(message);
+  render: function render() {
+    return React.createElement('div', { className: 'container chat' }, React.createElement('div', { className: 'row' }, React.createElement(MessagesSection, null), React.createElement(UsersSection, null), React.createElement(FormSection, null)));
   }
 });
 
@@ -20512,16 +20511,13 @@ module.exports = Chat;
 'use strict';
 
 var React = require('react');
+var AppActions = require('../../actions/AppActions');
 
 var FormSection = React.createClass({ displayName: 'FormSection',
   getInitialState: function getInitialState() {
     return {
       value: ''
     };
-  },
-
-  render: function render() {
-    return React.createElement('div', { className: 'col-sm-12 chat__form' }, React.createElement('div', { className: 'input-group' }, React.createElement('input', { type: 'text', value: this.state.value, onChange: this.handleChange, onKeyDown: this.handleKeyDown, className: 'form-control', placeholder: 'Mesaj' }), React.createElement('span', { className: 'input-group-btn' }, React.createElement('button', { onClick: this.send, className: 'btn btn-default', type: 'button' }, 'Gönder'))));
   },
 
   handleChange: function handleChange(event) {
@@ -20532,17 +20528,21 @@ var FormSection = React.createClass({ displayName: 'FormSection',
 
   handleKeyDown: function handleKeyDown(event) {
     if (event.keyCode == 13) {
-      this.send();
+      this._sendMessage();
     }
   },
 
   handleOnClick: function handleOnClick(event) {
-    this.send();
+    this._sendMessage();
   },
 
-  send: function send() {
+  render: function render() {
+    return React.createElement('div', { className: 'col-sm-12 chat__form' }, React.createElement('div', { className: 'input-group' }, React.createElement('input', { type: 'text', value: this.state.value, onChange: this.handleChange, onKeyDown: this.handleKeyDown, className: 'form-control', placeholder: 'Mesaj' }), React.createElement('span', { className: 'input-group-btn' }, React.createElement('button', { onClick: this._sendMessage, className: 'btn btn-default', type: 'button' }, 'Gönder'))));
+  },
+
+  _sendMessage: function _sendMessage() {
     if (this.state.value) {
-      this.props.addMessage(this.state.value);
+      AppActions.addMessage(this.state.value);
 
       this.setState({
         value: ''
@@ -20553,14 +20553,14 @@ var FormSection = React.createClass({ displayName: 'FormSection',
 
 module.exports = FormSection;
 
-},{"react":162}],166:[function(require,module,exports){
+},{"../../actions/AppActions":163,"react":162}],166:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
 
 var GroupItem = React.createClass({ displayName: "GroupItem",
   render: function render() {
-    return React.createElement("li", { role: "presentation", className: "active" }, React.createElement("a", { href: "#" }, this.props.name));
+    return React.createElement("li", { className: "active" }, React.createElement("a", { href: "#" }, this.props.name));
   }
 });
 
@@ -20572,16 +20572,48 @@ module.exports = GroupItem;
 var React = require('react');
 
 var GroupItem = require('./Group.react');
+var GroupStore = require('../../stores/GroupStore');
+var AppActions = require('../../actions/AppActions');
 
 var GroupsBox = React.createClass({ displayName: 'GroupsBox',
+  getInitialState: function getInitialState() {
+    return {
+      groups: GroupStore.getAll()
+    };
+  },
+
+  componentDidMount: function componentDidMount() {
+    GroupStore.addChangeListener(this.onGroupsChange);
+  },
+
+  componentWillUnmount: function componentWillUnmount() {
+    GroupStore.removeChangeListener(this.onGroupsChange);
+  },
+
+  onGroupsChange: function onGroupsChange() {
+    this.setState({
+      groups: GroupStore.getAll()
+    });
+  },
+
   render: function render() {
-    return React.createElement('ul', { className: 'nav nav-tabs nav-justified' }, React.createElement(GroupItem, { name: 'grup 1' }), React.createElement('li', { role: 'presentation' }, React.createElement('a', { href: '#' }, React.createElement('i', { className: 'glyphicon glyphicon-plus' }), ' Grup ekle')));
+    var groupListItems = this.state.groups.map(function (group) {
+      return React.createElement(GroupItem, { key: group.id, name: group.groupName });
+    });
+
+    return React.createElement('ul', { className: 'nav nav-tabs nav-justified' }, groupListItems, React.createElement('li', null, React.createElement('a', { href: '#', onClick: this._addGroup }, React.createElement('i', { className: 'glyphicon glyphicon-plus' }), ' Grup ekle')));
+  },
+
+  _addGroup: function _addGroup(event) {
+    event.preventDefault();
+    var groupName = prompt('Group Name:');
+    if (groupName) AppActions.addGroup(groupName);
   }
 });
 
 module.exports = GroupsBox;
 
-},{"./Group.react":166,"react":162}],168:[function(require,module,exports){
+},{"../../actions/AppActions":163,"../../stores/GroupStore":175,"./Group.react":166,"react":162}],168:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -20610,61 +20642,54 @@ var MessageList = React.createClass({ displayName: 'MessageList',
   },
 
   componentDidMount: function componentDidMount() {
-    MessageStore.addChangeListener(this._onMessagesChange);
+    MessageStore.addChangeListener(this.onMessagesChange);
   },
 
   componentWillUnmount: function componentWillUnmount() {
-    MessageStore.removeChangeListener(this._onMessagesChange);
+    MessageStore.removeChangeListener(this.onMessagesChange);
   },
 
-  getInitialStates: function getInitialStates() {
-    return {
-      messages: this.props.messages
-    };
+  onMessagesChange: function onMessagesChange() {
+    this.setState({
+      messages: MessageStore.getAll()
+    });
   },
 
   render: function render() {
-
     var messageListItems = this.state.messages.map(function (message) {
       return React.createElement(MessageItem, { key: message.id, user: message.authorName, message: message.text });
     });
 
     return React.createElement('div', { className: 'chat__messages' }, React.createElement('ul', { className: 'list-group' }, messageListItems));
-  },
-
-  _onMessagesChange: function _onMessagesChange() {
-    this.setState({
-      messages: MessageStore.getAll()
-    });
   }
 });
 
 module.exports = MessageList;
 
-},{"../../stores/MessageStore":175,"./Message.react":168,"react":162}],170:[function(require,module,exports){
+},{"../../stores/MessageStore":176,"./Message.react":168,"react":162}],170:[function(require,module,exports){
 'use strict';
 
 var React = require('react');
 
-var GroupsBox = require('./Groups.react');
+var GroupList = require('./GroupList.react');
 var MessageList = require('./MessageList.react');
 
 var MessagesSection = React.createClass({ displayName: 'MessagesSection',
   render: function render() {
-    return React.createElement('div', { className: 'col-sm-8' }, React.createElement(GroupsBox, null), React.createElement(MessageList, { messages: this.props.messages }));
+    return React.createElement('div', { className: 'col-sm-8' }, React.createElement(GroupList, null), React.createElement(MessageList, null));
   }
 });
 
 module.exports = MessagesSection;
 
-},{"./Groups.react":167,"./MessageList.react":169,"react":162}],171:[function(require,module,exports){
+},{"./GroupList.react":167,"./MessageList.react":169,"react":162}],171:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
 
 var UserItem = React.createClass({ displayName: "UserItem",
   render: function render() {
-    return React.createElement("a", { href: "#", className: "list-group-item /*list-group-item-warning*/" }, React.createElement("span", { className: "badge" }, ~ ~(Math.random() * 100)), "User ", ~ ~(Math.random() * 10));
+    return React.createElement("a", { href: "#", className: "list-group-item /*list-group-item-warning*/" }, React.createElement("span", { className: "badge" }, "0"), this.props.name);
   }
 });
 
@@ -20676,16 +20701,42 @@ module.exports = UserItem;
 var React = require('react');
 
 var UserItem = require('./User.react');
+var UserStore = require('../../stores/UserStore');
 
 var UsersSection = React.createClass({ displayName: 'UsersSection',
+  getInitialState: function getInitialState() {
+    return {
+      users: UserStore.getAll()
+    };
+  },
+
+  componentDidMount: function componentDidMount() {
+    UserStore.addChangeListener(this.onUsersChange);
+  },
+
+  componentWillUnmount: function componentWillUnmount() {
+    UserStore.removeChangeListener(this.onUsersChange);
+  },
+
+  onUsersChange: function onUsersChange() {
+    this.setState({
+      users: UserStore.getAll()
+    });
+  },
+
   render: function render() {
-    return React.createElement('div', { className: 'col-sm-4' }, React.createElement('div', { className: 'panel panel-default chat__users' }, React.createElement('div', { className: 'panel-heading' }, React.createElement('h3', { className: 'panel-title' }, 'Kullanıcılar:')), React.createElement('div', { className: 'panel-body' }, React.createElement('ul', { className: 'list-group' }, React.createElement(UserItem, null), React.createElement(UserItem, null), React.createElement(UserItem, null)))));
+    var userListItems = this.state.users.map(function (user) {
+      console.log(user);
+      return React.createElement(UserItem, { key: user.id, name: user.userName });
+    });
+
+    return React.createElement('div', { className: 'col-sm-4' }, React.createElement('div', { className: 'panel panel-default chat__users' }, React.createElement('div', { className: 'panel-heading' }, React.createElement('h3', { className: 'panel-title' }, 'Kullanıcılar:')), React.createElement('div', { className: 'panel-body' }, React.createElement('ul', { className: 'list-group' }, userListItems))));
   }
 });
 
 module.exports = UsersSection;
 
-},{"./User.react":171,"react":162}],173:[function(require,module,exports){
+},{"../../stores/UserStore":177,"./User.react":171,"react":162}],173:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -20724,6 +20775,59 @@ var assign = require('object-assign');
 
 var CHANGE_EVENT = 'change';
 
+var _groups = {};
+
+var addGroup = function addGroup(groupName) {
+  var timestamp = Date.now();
+
+  var group = {
+    id: 'm_' + timestamp,
+    groupName: groupName
+  };
+
+  _groups[group.id] = group;
+};
+
+var GroupStore = assign({}, EventEmitter.prototype, {
+  addChangeListener: function addChangeListener(callback) {
+    this.on(CHANGE_EVENT, callback);
+  },
+  removeChangeListener: function removeChangeListener(callback) {
+    this.removeListener(CHANGE_EVENT, callback);
+  },
+  getAll: function getAll() {
+    var groupArray = [];
+
+    for (var id in _groups) {
+      groupArray.push(_groups[id]);
+    }
+
+    return groupArray;
+  } });
+
+GroupStore.dispatchToken = AppDispatcher.register(function (payload) {
+  var action = payload.action;
+
+  switch (action.actionType) {
+    case AppConstants.ADD_GROUP:
+      addGroup(action.groupName);
+      GroupStore.emit(CHANGE_EVENT);
+      break;
+  }
+});
+
+module.exports = GroupStore;
+
+},{"../constants/AppConstants":173,"../dispatcher/AppDispatcher":174,"events":2,"object-assign":7}],176:[function(require,module,exports){
+'use strict';
+
+var AppDispatcher = require('../dispatcher/AppDispatcher');
+var AppConstants = require('../constants/AppConstants');
+var EventEmitter = require('events').EventEmitter;
+var assign = require('object-assign');
+
+var CHANGE_EVENT = 'change';
+
 var _messages = {};
 
 var addMessage = function addMessage(text) {
@@ -20731,7 +20835,7 @@ var addMessage = function addMessage(text) {
 
   var message = {
     id: 'm_' + timestamp,
-    authorName: 'Gork',
+    authorName: 'Gork', // Hardcode for now
     date: new Date(timestamp),
     text: text
   };
@@ -20768,5 +20872,57 @@ MessageStore.dispatchToken = AppDispatcher.register(function (payload) {
 });
 
 module.exports = MessageStore;
+
+},{"../constants/AppConstants":173,"../dispatcher/AppDispatcher":174,"events":2,"object-assign":7}],177:[function(require,module,exports){
+'use strict';
+
+var AppDispatcher = require('../dispatcher/AppDispatcher');
+var AppConstants = require('../constants/AppConstants');
+var EventEmitter = require('events').EventEmitter;
+var assign = require('object-assign');
+
+var CHANGE_EVENT = 'change';
+
+var _users = {};
+
+var addUser = function addUser(userName) {
+  var timestamp = Date.now();
+
+  var user = {
+    id: 'm_' + timestamp,
+    userName: userName };
+
+  _users[user.id] = user;
+};
+
+var UserStore = assign({}, EventEmitter.prototype, {
+  addChangeListener: function addChangeListener(callback) {
+    this.on(CHANGE_EVENT, callback);
+  },
+  removeChangeListener: function removeChangeListener(callback) {
+    this.removeListener(CHANGE_EVENT, callback);
+  },
+  getAll: function getAll() {
+    var userArray = [];
+
+    for (var id in _users) {
+      userArray.push(_users[id]);
+    }
+
+    return userArray;
+  } });
+
+UserStore.dispatchToken = AppDispatcher.register(function (payload) {
+  var action = payload.action;
+
+  switch (action.actionType) {
+    case AppConstants.ADD_USER:
+      addUser(action.userName);
+      UserStore.emit(CHANGE_EVENT);
+      break;
+  }
+});
+
+module.exports = UserStore;
 
 },{"../constants/AppConstants":173,"../dispatcher/AppDispatcher":174,"events":2,"object-assign":7}]},{},[1]);

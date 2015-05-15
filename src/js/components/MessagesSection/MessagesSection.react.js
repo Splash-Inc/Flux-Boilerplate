@@ -1,14 +1,14 @@
 var React = require('react');
 
-var GroupsBox = require('./Groups.react');
+var GroupList = require('./GroupList.react');
 var MessageList = require('./MessageList.react');
 
 var MessagesSection = React.createClass({
   render: function() {
     return (
       <div className="col-sm-8">
-        <GroupsBox />
-        <MessageList messages={this.props.messages} />
+        <GroupList />
+        <MessageList />
       </div>
     );
   }

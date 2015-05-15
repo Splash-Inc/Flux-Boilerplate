@@ -1,23 +1,11 @@
 var React = require('react');
+var AppActions = require('../../actions/AppActions');
 
 var FormSection = React.createClass({
   getInitialState: function() {
     return {
       value: ''
     }
-  },
-
-  render: function() {
-    return (
-      <div className="col-sm-12 chat__form">
-        <div className="input-group">
-          <input type="text" value={this.state.value} onChange={this.handleChange} onKeyDown={this.handleKeyDown} className="form-control" placeholder="Mesaj" />
-          <span className="input-group-btn">
-            <button onClick={this.send} className="btn btn-default" type="button">Gönder</button>
-          </span>
-        </div>
-      </div>
-    );
   },
 
   handleChange: function(event) {
@@ -28,17 +16,30 @@ var FormSection = React.createClass({
 
   handleKeyDown: function(event) {
     if( event.keyCode == 13 ) {
-      this.send();
+      this._sendMessage();
     }
   },
 
   handleOnClick: function(event) {
-    this.send();
+    this._sendMessage();
   },
 
-  send: function() {
+  render: function() {
+    return (
+      <div className="col-sm-12 chat__form">
+        <div className="input-group">
+          <input type="text" value={this.state.value} onChange={this.handleChange} onKeyDown={this.handleKeyDown} className="form-control" placeholder="Mesaj" />
+          <span className="input-group-btn">
+            <button onClick={this._sendMessage} className="btn btn-default" type="button">Gönder</button>
+          </span>
+        </div>
+      </div>
+    );
+  },
+
+  _sendMessage: function() {
     if(this.state.value) {
-      this.props.addMessage(this.state.value);
+      AppActions.addMessage(this.state.value);
 
       this.setState({
         value: ''

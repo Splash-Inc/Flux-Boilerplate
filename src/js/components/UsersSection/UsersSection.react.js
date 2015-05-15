@@ -1,9 +1,37 @@
 var React = require('react');
 
 var UserItem = require('./User.react');
+var UserStore = require('../../stores/UserStore');
 
 var UsersSection = React.createClass({
+  getInitialState: function() {
+    return {
+      users: UserStore.getAll()
+    }
+  },
+
+  componentDidMount: function() {
+    UserStore.addChangeListener(this.onUsersChange);
+  },
+
+  componentWillUnmount: function() {
+    UserStore.removeChangeListener(this.onUsersChange);
+  },
+
+  onUsersChange: function() {
+    this.setState({
+      users: UserStore.getAll()
+    })
+  },
+
   render: function() {
+    var userListItems = this.state.users.map(function(user) {
+      console.log(user);
+      return (
+        <UserItem key={user.id} name={user.userName} />
+      );
+    });
+
     return (
       <div className="col-sm-4">
         <div className="panel panel-default chat__users">
@@ -12,9 +40,7 @@ var UsersSection = React.createClass({
           </div>
           <div className="panel-body">
             <ul className="list-group">
-              <UserItem />
-              <UserItem />
-              <UserItem />
+              {userListItems}
             </ul>
           </div>
         </div>
