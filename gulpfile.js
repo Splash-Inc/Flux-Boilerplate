@@ -106,7 +106,9 @@ gulp.task('server', function() {
 // Development mode
 watchify.args.debug = watchify.args.fullPaths = configs.browserify.debug;
 
-var bundler = watchify(browserify(configs.browserify.src, watchify.args));
+var bundler = watchify(browserify(configs.browserify.src, watchify.args), {
+  poll: 200
+});
 
 configs.browserify.settings.transform.forEach(function(t) {
   bundler.transform(t);
