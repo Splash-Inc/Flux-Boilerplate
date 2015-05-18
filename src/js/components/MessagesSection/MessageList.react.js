@@ -1,33 +1,42 @@
 var React = require('react');
-
 var MessageItem = require('./Message.react');
+var GroupStore = require('../../stores/GroupStore');
 var MessageStore = require('../../stores/MessageStore');
+var UserStore = require('../../stores/UserStore');
 
 var MessageList = React.createClass({
   getInitialState: function() {
     return {
-      messages: MessageStore.getAll()
+      messages: MessageStore.getAllForCurrentGroup()
     }
   },
 
   componentDidMount: function() {
     MessageStore.addChangeListener(this.onMessagesChange);
+    GroupStore.addChangeListener(this.onGroupsChange);
   },
 
   componentWillUnmount: function() {
     MessageStore.removeChangeListener(this.onMessagesChange);
+    GroupStore.removeChangeListener(this.onGroupsChange);
   },
 
   onMessagesChange: function() {
     this.setState({
-      messages: MessageStore.getAll()
-    })
+      messages: MessageStore.getAllForCurrentGroup()
+    });
+  },
+
+  onGroupsChange: function() {
+    this.setState({
+      messages: MessageStore.getAllForCurrentGroup()
+    });
   },
 
   render: function() {
     var messageListItems = this.state.messages.map(function(message) {
       return (
-        <MessageItem key={message.id} user={message.authorName} message={message.text} />
+        <MessageItem key={message.id} user={UserStore.getForOne(message.authorID).userName} message={message.text} />
       );
     });
 

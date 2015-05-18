@@ -5,6 +5,9 @@ var UsersSection = require('./UsersSection/UsersSection.react');
 var FormSection = require('./FormSection/FormSection.react');
 var AppActions = require('../actions/AppActions');
 
+var UserStore = require('../stores/UserStore');
+
+
 var Chat = React.createClass({
   componentWillMount: function() {
     var userName = prompt('User name:');
@@ -17,7 +20,7 @@ var Chat = React.createClass({
         <div className="row">
           <MessagesSection />
           <UsersSection />
-          <FormSection />
+          <FormSection user={UserStore.getCurrentID()} />
         </div>
       </div>
     );

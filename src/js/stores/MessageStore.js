@@ -1,5 +1,6 @@
 var AppDispatcher = require('../dispatcher/AppDispatcher');
 var AppConstants = require('../constants/AppConstants');
+var GroupStore = require('./GroupStore');
 var EventEmitter = require('events').EventEmitter;
 var assign = require('object-assign');
 
@@ -7,26 +8,45 @@ var CHANGE_EVENT = 'change';
 
 var _messages = {};
 
-var addMessage = function(text) {
+var addMessage = function(msg) {
   var timestamp = Date.now();
 
   var message = {
     id: 'm_'+ timestamp,
-    authorName: 'Gork', // Hardcode for now
+    authorID: msg.authorID,
     date: new Date(timestamp),
-    text: text
+    text: msg.text,
+    groupID: msg.groupID
   };
 
   _messages[message.id] = message;
 }
 
 var MessageStore = assign({}, EventEmitter.prototype, {
-  addChangeListener: function(callback){
+  addChangeListener: function(callback) {
     this.on(CHANGE_EVENT, callback);
   },
-  removeChangeListener: function(callback){
+
+  removeChangeListener: function(callback) {
     this.removeListener(CHANGE_EVENT, callback);
   },
+
+  getAllForGroup: function(groupID) {
+    var groupMessages = [];
+
+    for(var id in _messages) {
+      if(_messages[id].groupID == groupID) {
+        groupMessages.push(_messages[id]);
+      }
+    }
+
+    return groupMessages;
+  },
+
+  getAllForCurrentGroup: function() {
+    return this.getAllForGroup(GroupStore.getCurrentID());
+  },
+
   getAll: function(){
     var messageArray = [];
 
@@ -43,7 +63,8 @@ MessageStore.dispatchToken = AppDispatcher.register(function(payload) {
 
   switch(action.actionType) {
     case AppConstants.ADD_MESSAGE:
-      addMessage(action.message);
+      var message = action.message;
+      addMessage(message);
       MessageStore.emit(CHANGE_EVENT);
       break;
   }

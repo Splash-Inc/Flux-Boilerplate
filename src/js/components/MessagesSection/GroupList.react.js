@@ -1,5 +1,4 @@
 var React = require('react');
-
 var GroupItem = require('./Group.react');
 var GroupStore = require('../../stores/GroupStore');
 var AppActions = require('../../actions/AppActions');
@@ -28,9 +27,9 @@ var GroupsBox = React.createClass({
   render: function() {
     var groupListItems = this.state.groups.map(function(group) {
       return (
-        <GroupItem key={group.id} name={group.groupName} />
+        <GroupItem key={group.id} group={group} clickGroup={this.clickGroup} activeGroup={GroupStore.getCurrentID()} />
       );
-    });
+    }, this);
 
     return (
       <ul className="nav nav-tabs nav-justified">

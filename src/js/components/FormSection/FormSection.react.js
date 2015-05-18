@@ -1,5 +1,6 @@
 var React = require('react');
 var AppActions = require('../../actions/AppActions');
+var GroupStore = require('../../stores/GroupStore');
 
 var FormSection = React.createClass({
   getInitialState: function() {
@@ -39,7 +40,11 @@ var FormSection = React.createClass({
 
   _sendMessage: function() {
     if(this.state.value) {
-      AppActions.addMessage(this.state.value);
+      AppActions.addMessage({
+        text: this.state.value,
+        groupID: GroupStore.getCurrentID(),
+        authorID: this.props.user
+      });
 
       this.setState({
         value: ''

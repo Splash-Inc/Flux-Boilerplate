@@ -9,6 +9,7 @@ var AppActions = {
       message: message
     });
   },
+
   removeMessage: function(index) {
     AppDispatcher.handleAction({
       actionType: AppConstants.REMOVE_MESSAGE,
@@ -22,10 +23,18 @@ var AppActions = {
       groupName: groupName
     });
   },
+
   removeGroup: function(index) {
     AppDispatcher.handleAction({
       actionType: AppConstants.REMOVE_GROUP,
       index: index
+    });
+  },
+
+  clickGroup: function(groupId) {
+    AppDispatcher.handleAction({
+      actionType: AppConstants.CLICK_GROUP,
+      groupId: groupId
     });
   },
 
@@ -35,6 +44,7 @@ var AppActions = {
       userName: userName
     });
   },
+
   removeUser: function(index) {
     AppDispatcher.handleAction({
       actionType: AppConstants.REMOVE_USER,

@@ -1,5 +1,4 @@
 var React = require('react');
-
 var GroupList = require('./GroupList.react');
 var MessageList = require('./MessageList.react');
 

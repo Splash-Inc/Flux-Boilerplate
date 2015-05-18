@@ -5,7 +5,13 @@ var assign = require('object-assign');
 
 var CHANGE_EVENT = 'change';
 
-var _groups = {};
+var _groups = {
+  0: {
+    id: 'default',
+    groupName: 'first group'
+  }
+};
+var _currentID = 'default';
 
 var addGroup = function(groupName) {
   var timestamp = Date.now();
@@ -22,10 +28,16 @@ var GroupStore = assign({}, EventEmitter.prototype, {
   addChangeListener: function(callback){
     this.on(CHANGE_EVENT, callback);
   },
+
   removeChangeListener: function(callback){
     this.removeListener(CHANGE_EVENT, callback);
   },
-  getAll: function(){
+
+  get: function(id) {
+    return _groups[id];
+  },
+
+  getAll: function() {
     var groupArray = [];
 
     for(var id in _groups) {
@@ -34,16 +46,31 @@ var GroupStore = assign({}, EventEmitter.prototype, {
 
     return groupArray;
   },
+
+  getCurrentID: function() {
+    return _currentID;
+  },
+
+  getCurrent: function() {
+    return this.get(this.getCurrentID());
+  }
 });
 
 GroupStore.dispatchToken = AppDispatcher.register(function(payload) {
   var action = payload.action;
 
   switch(action.actionType) {
+
     case AppConstants.ADD_GROUP:
       addGroup(action.groupName);
       GroupStore.emit(CHANGE_EVENT);
       break;
+
+    case AppConstants.CLICK_GROUP:
+      _currentID = action.groupId;
+      GroupStore.emit(CHANGE_EVENT);
+      break;
+
   }
 });
 

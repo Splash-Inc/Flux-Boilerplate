@@ -6,6 +6,7 @@ var assign = require('object-assign');
 var CHANGE_EVENT = 'change';
 
 var _users = {};
+var _currentID = null;
 
 var addUser = function(userName) {
   var timestamp = Date.now();
@@ -15,6 +16,9 @@ var addUser = function(userName) {
     userName: userName,
   };
 
+  if(Object.keys(_users).length==0)
+    _currentID = user.id;
+
   _users[user.id] = user;
 }
 
@@ -22,9 +26,11 @@ var UserStore = assign({}, EventEmitter.prototype, {
   addChangeListener: function(callback){
     this.on(CHANGE_EVENT, callback);
   },
+
   removeChangeListener: function(callback){
     this.removeListener(CHANGE_EVENT, callback);
   },
+
   getAll: function(){
     var userArray = [];
 
@@ -34,6 +40,19 @@ var UserStore = assign({}, EventEmitter.prototype, {
 
     return userArray;
   },
+
+  getForOne: function(userID) {
+    var user = _users[userID];
+
+    if(user)
+      return user;
+    else
+      return false;
+  },
+
+  getCurrentID: function() {
+    return _currentID;
+  }
 });
 
 UserStore.dispatchToken = AppDispatcher.register(function(payload) {

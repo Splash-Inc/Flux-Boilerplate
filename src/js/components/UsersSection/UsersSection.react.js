@@ -1,5 +1,4 @@
 var React = require('react');
-
 var UserItem = require('./User.react');
 var UserStore = require('../../stores/UserStore');
 
@@ -26,7 +25,6 @@ var UsersSection = React.createClass({
 
   render: function() {
     var userListItems = this.state.users.map(function(user) {
-      console.log(user);
       return (
         <UserItem key={user.id} name={user.userName} />
       );

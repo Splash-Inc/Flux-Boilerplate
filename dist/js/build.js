@@ -2,7 +2,6 @@
 'use strict';
 
 var React = require('react');
-
 var ChatApp = require('./components/Chat.react');
 
 React.render(React.createElement(ChatApp, null), document.getElementById('chatApp'));
@@ -20448,6 +20447,7 @@ var AppActions = {
       message: message
     });
   },
+
   removeMessage: function removeMessage(index) {
     AppDispatcher.handleAction({
       actionType: AppConstants.REMOVE_MESSAGE,
@@ -20461,10 +20461,18 @@ var AppActions = {
       groupName: groupName
     });
   },
+
   removeGroup: function removeGroup(index) {
     AppDispatcher.handleAction({
       actionType: AppConstants.REMOVE_GROUP,
       index: index
+    });
+  },
+
+  clickGroup: function clickGroup(groupId) {
+    AppDispatcher.handleAction({
+      actionType: AppConstants.CLICK_GROUP,
+      groupId: groupId
     });
   },
 
@@ -20474,6 +20482,7 @@ var AppActions = {
       userName: userName
     });
   },
+
   removeUser: function removeUser(index) {
     AppDispatcher.handleAction({
       actionType: AppConstants.REMOVE_USER,
@@ -20494,6 +20503,8 @@ var UsersSection = require('./UsersSection/UsersSection.react');
 var FormSection = require('./FormSection/FormSection.react');
 var AppActions = require('../actions/AppActions');
 
+var UserStore = require('../stores/UserStore');
+
 var Chat = React.createClass({ displayName: 'Chat',
   componentWillMount: function componentWillMount() {
     var userName = prompt('User name:');
@@ -20501,17 +20512,18 @@ var Chat = React.createClass({ displayName: 'Chat',
   },
 
   render: function render() {
-    return React.createElement('div', { className: 'container chat' }, React.createElement('div', { className: 'row' }, React.createElement(MessagesSection, null), React.createElement(UsersSection, null), React.createElement(FormSection, null)));
+    return React.createElement('div', { className: 'container chat' }, React.createElement('div', { className: 'row' }, React.createElement(MessagesSection, null), React.createElement(UsersSection, null), React.createElement(FormSection, { user: UserStore.getCurrentID() })));
   }
 });
 
 module.exports = Chat;
 
-},{"../actions/AppActions":163,"./FormSection/FormSection.react":165,"./MessagesSection/MessagesSection.react":170,"./UsersSection/UsersSection.react":172,"react":162}],165:[function(require,module,exports){
+},{"../actions/AppActions":163,"../stores/UserStore":177,"./FormSection/FormSection.react":165,"./MessagesSection/MessagesSection.react":170,"./UsersSection/UsersSection.react":172,"react":162}],165:[function(require,module,exports){
 'use strict';
 
 var React = require('react');
 var AppActions = require('../../actions/AppActions');
+var GroupStore = require('../../stores/GroupStore');
 
 var FormSection = React.createClass({ displayName: 'FormSection',
   getInitialState: function getInitialState() {
@@ -20542,7 +20554,11 @@ var FormSection = React.createClass({ displayName: 'FormSection',
 
   _sendMessage: function _sendMessage() {
     if (this.state.value) {
-      AppActions.addMessage(this.state.value);
+      AppActions.addMessage({
+        text: this.state.value,
+        groupID: GroupStore.getCurrentID(),
+        authorID: this.props.user
+      });
 
       this.setState({
         value: ''
@@ -20553,24 +20569,36 @@ var FormSection = React.createClass({ displayName: 'FormSection',
 
 module.exports = FormSection;
 
-},{"../../actions/AppActions":163,"react":162}],166:[function(require,module,exports){
-"use strict";
+},{"../../actions/AppActions":163,"../../stores/GroupStore":175,"react":162}],166:[function(require,module,exports){
+'use strict';
 
-var React = require("react");
+var React = require('react');
+var AppActions = require('../../actions/AppActions');
 
-var GroupItem = React.createClass({ displayName: "GroupItem",
+var GroupItem = React.createClass({ displayName: 'GroupItem',
+  handleClick: function handleClick(event) {
+    event.preventDefault();
+    this.props.clickGroup(this.key);
+  },
+
+  clickGroup: function clickGroup(event) {
+    event.preventDefault();
+    AppActions.clickGroup(this.props.group.id);
+  },
+
   render: function render() {
-    return React.createElement("li", { className: "active" }, React.createElement("a", { href: "#" }, this.props.name));
+    var active = this.props.activeGroup == this.props.group.id ? 'active' : '';
+
+    return React.createElement('li', { className: active }, React.createElement('a', { href: '#', onClick: this.clickGroup }, this.props.group.groupName));
   }
 });
 
 module.exports = GroupItem;
 
-},{"react":162}],167:[function(require,module,exports){
+},{"../../actions/AppActions":163,"react":162}],167:[function(require,module,exports){
 'use strict';
 
 var React = require('react');
-
 var GroupItem = require('./Group.react');
 var GroupStore = require('../../stores/GroupStore');
 var AppActions = require('../../actions/AppActions');
@@ -20598,8 +20626,8 @@ var GroupsBox = React.createClass({ displayName: 'GroupsBox',
 
   render: function render() {
     var groupListItems = this.state.groups.map(function (group) {
-      return React.createElement(GroupItem, { key: group.id, name: group.groupName });
-    });
+      return React.createElement(GroupItem, { key: group.id, group: group, clickGroup: this.clickGroup, activeGroup: GroupStore.getCurrentID() });
+    }, this);
 
     return React.createElement('ul', { className: 'nav nav-tabs nav-justified' }, groupListItems, React.createElement('li', null, React.createElement('a', { href: '#', onClick: this._addGroup }, React.createElement('i', { className: 'glyphicon glyphicon-plus' }), ' Grup ekle')));
   },
@@ -20630,34 +20658,43 @@ module.exports = MessageItem;
 'use strict';
 
 var React = require('react');
-
 var MessageItem = require('./Message.react');
+var GroupStore = require('../../stores/GroupStore');
 var MessageStore = require('../../stores/MessageStore');
+var UserStore = require('../../stores/UserStore');
 
 var MessageList = React.createClass({ displayName: 'MessageList',
   getInitialState: function getInitialState() {
     return {
-      messages: MessageStore.getAll()
+      messages: MessageStore.getAllForCurrentGroup()
     };
   },
 
   componentDidMount: function componentDidMount() {
     MessageStore.addChangeListener(this.onMessagesChange);
+    GroupStore.addChangeListener(this.onGroupsChange);
   },
 
   componentWillUnmount: function componentWillUnmount() {
     MessageStore.removeChangeListener(this.onMessagesChange);
+    GroupStore.removeChangeListener(this.onGroupsChange);
   },
 
   onMessagesChange: function onMessagesChange() {
     this.setState({
-      messages: MessageStore.getAll()
+      messages: MessageStore.getAllForCurrentGroup()
+    });
+  },
+
+  onGroupsChange: function onGroupsChange() {
+    this.setState({
+      messages: MessageStore.getAllForCurrentGroup()
     });
   },
 
   render: function render() {
     var messageListItems = this.state.messages.map(function (message) {
-      return React.createElement(MessageItem, { key: message.id, user: message.authorName, message: message.text });
+      return React.createElement(MessageItem, { key: message.id, user: UserStore.getForOne(message.authorID).userName, message: message.text });
     });
 
     return React.createElement('div', { className: 'chat__messages' }, React.createElement('ul', { className: 'list-group' }, messageListItems));
@@ -20666,11 +20703,10 @@ var MessageList = React.createClass({ displayName: 'MessageList',
 
 module.exports = MessageList;
 
-},{"../../stores/MessageStore":176,"./Message.react":168,"react":162}],170:[function(require,module,exports){
+},{"../../stores/GroupStore":175,"../../stores/MessageStore":176,"../../stores/UserStore":177,"./Message.react":168,"react":162}],170:[function(require,module,exports){
 'use strict';
 
 var React = require('react');
-
 var GroupList = require('./GroupList.react');
 var MessageList = require('./MessageList.react');
 
@@ -20699,7 +20735,6 @@ module.exports = UserItem;
 'use strict';
 
 var React = require('react');
-
 var UserItem = require('./User.react');
 var UserStore = require('../../stores/UserStore');
 
@@ -20726,7 +20761,6 @@ var UsersSection = React.createClass({ displayName: 'UsersSection',
 
   render: function render() {
     var userListItems = this.state.users.map(function (user) {
-      console.log(user);
       return React.createElement(UserItem, { key: user.id, name: user.userName });
     });
 
@@ -20745,6 +20779,7 @@ module.exports = {
 
   ADD_GROUP: 'ADD_GROUP',
   REMOVE_GROUP: 'REMOVE_GROUP',
+  CLICK_GROUP: 'CLICK_GROUP',
 
   ADD_USER: 'ADD_USER',
   REMOVE_USER: 'REMOVE_USER'
@@ -20775,7 +20810,13 @@ var assign = require('object-assign');
 
 var CHANGE_EVENT = 'change';
 
-var _groups = {};
+var _groups = {
+  0: {
+    id: 'default',
+    groupName: 'first group'
+  }
+};
+var _currentID = 'default';
 
 var addGroup = function addGroup(groupName) {
   var timestamp = Date.now();
@@ -20792,9 +20833,15 @@ var GroupStore = assign({}, EventEmitter.prototype, {
   addChangeListener: function addChangeListener(callback) {
     this.on(CHANGE_EVENT, callback);
   },
+
   removeChangeListener: function removeChangeListener(callback) {
     this.removeListener(CHANGE_EVENT, callback);
   },
+
+  get: function get(id) {
+    return _groups[id];
+  },
+
   getAll: function getAll() {
     var groupArray = [];
 
@@ -20803,16 +20850,32 @@ var GroupStore = assign({}, EventEmitter.prototype, {
     }
 
     return groupArray;
-  } });
+  },
+
+  getCurrentID: function getCurrentID() {
+    return _currentID;
+  },
+
+  getCurrent: function getCurrent() {
+    return this.get(this.getCurrentID());
+  }
+});
 
 GroupStore.dispatchToken = AppDispatcher.register(function (payload) {
   var action = payload.action;
 
   switch (action.actionType) {
+
     case AppConstants.ADD_GROUP:
       addGroup(action.groupName);
       GroupStore.emit(CHANGE_EVENT);
       break;
+
+    case AppConstants.CLICK_GROUP:
+      _currentID = action.groupId;
+      GroupStore.emit(CHANGE_EVENT);
+      break;
+
   }
 });
 
@@ -20823,6 +20886,7 @@ module.exports = GroupStore;
 
 var AppDispatcher = require('../dispatcher/AppDispatcher');
 var AppConstants = require('../constants/AppConstants');
+var GroupStore = require('./GroupStore');
 var EventEmitter = require('events').EventEmitter;
 var assign = require('object-assign');
 
@@ -20830,14 +20894,15 @@ var CHANGE_EVENT = 'change';
 
 var _messages = {};
 
-var addMessage = function addMessage(text) {
+var addMessage = function addMessage(msg) {
   var timestamp = Date.now();
 
   var message = {
     id: 'm_' + timestamp,
-    authorName: 'Gork', // Hardcode for now
+    authorID: msg.authorID,
     date: new Date(timestamp),
-    text: text
+    text: msg.text,
+    groupID: msg.groupID
   };
 
   _messages[message.id] = message;
@@ -20847,9 +20912,27 @@ var MessageStore = assign({}, EventEmitter.prototype, {
   addChangeListener: function addChangeListener(callback) {
     this.on(CHANGE_EVENT, callback);
   },
+
   removeChangeListener: function removeChangeListener(callback) {
     this.removeListener(CHANGE_EVENT, callback);
   },
+
+  getAllForGroup: function getAllForGroup(groupID) {
+    var groupMessages = [];
+
+    for (var id in _messages) {
+      if (_messages[id].groupID == groupID) {
+        groupMessages.push(_messages[id]);
+      }
+    }
+
+    return groupMessages;
+  },
+
+  getAllForCurrentGroup: function getAllForCurrentGroup() {
+    return this.getAllForGroup(GroupStore.getCurrentID());
+  },
+
   getAll: function getAll() {
     var messageArray = [];
 
@@ -20865,7 +20948,8 @@ MessageStore.dispatchToken = AppDispatcher.register(function (payload) {
 
   switch (action.actionType) {
     case AppConstants.ADD_MESSAGE:
-      addMessage(action.message);
+      var message = action.message;
+      addMessage(message);
       MessageStore.emit(CHANGE_EVENT);
       break;
   }
@@ -20873,7 +20957,7 @@ MessageStore.dispatchToken = AppDispatcher.register(function (payload) {
 
 module.exports = MessageStore;
 
-},{"../constants/AppConstants":173,"../dispatcher/AppDispatcher":174,"events":2,"object-assign":7}],177:[function(require,module,exports){
+},{"../constants/AppConstants":173,"../dispatcher/AppDispatcher":174,"./GroupStore":175,"events":2,"object-assign":7}],177:[function(require,module,exports){
 'use strict';
 
 var AppDispatcher = require('../dispatcher/AppDispatcher');
@@ -20884,6 +20968,7 @@ var assign = require('object-assign');
 var CHANGE_EVENT = 'change';
 
 var _users = {};
+var _currentID = null;
 
 var addUser = function addUser(userName) {
   var timestamp = Date.now();
@@ -20892,6 +20977,8 @@ var addUser = function addUser(userName) {
     id: 'm_' + timestamp,
     userName: userName };
 
+  if (Object.keys(_users).length == 0) _currentID = user.id;
+
   _users[user.id] = user;
 };
 
@@ -20899,9 +20986,11 @@ var UserStore = assign({}, EventEmitter.prototype, {
   addChangeListener: function addChangeListener(callback) {
     this.on(CHANGE_EVENT, callback);
   },
+
   removeChangeListener: function removeChangeListener(callback) {
     this.removeListener(CHANGE_EVENT, callback);
   },
+
   getAll: function getAll() {
     var userArray = [];
 
@@ -20910,7 +20999,18 @@ var UserStore = assign({}, EventEmitter.prototype, {
     }
 
     return userArray;
-  } });
+  },
+
+  getForOne: function getForOne(userID) {
+    var user = _users[userID];
+
+    if (user) return user;else return false;
+  },
+
+  getCurrentID: function getCurrentID() {
+    return _currentID;
+  }
+});
 
 UserStore.dispatchToken = AppDispatcher.register(function (payload) {
   var action = payload.action;
