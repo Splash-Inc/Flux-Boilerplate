@@ -1,0 +1,20 @@
+.chat {
+  margin: 10%;
+}
+.chat__messages {
+  height: 500px;
+  overflow: scroll;
+  border: 1px solid #ddd;
+  border-top: 0;
+  padding: 20px 20px 0px 20px;
+}
+.chat__form {
+  padding-top: 20px;
+}
+.chat__users {
+  height: 542px;
+  margin-bottom: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  box-shadow: none !important;
+}

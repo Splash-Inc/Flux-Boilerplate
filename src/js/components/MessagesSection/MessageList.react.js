@@ -33,12 +33,18 @@ var MessageList = React.createClass({
     });
   },
 
+  handleEdit: function(childElement) {
+    childElement.setState({
+      message: "TESTING"
+    })
+  },
+
   render: function() {
     var messageListItems = this.state.messages.map(function(message) {
       return (
-        <MessageItem key={message.id} user={UserStore.getForOne(message.authorID).userName} message={message.text} />
+        <MessageItem key={message.id} user={UserStore.getForOne(message.authorID).userName} onEdit={this.handleEdit} message={message.text} />
       );
-    });
+    }, this);
 
     return (
       <div className="chat__messages">
