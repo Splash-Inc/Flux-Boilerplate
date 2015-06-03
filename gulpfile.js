@@ -32,7 +32,10 @@ var configs = {
   },
   browserify: {
     settings: {
-      transform: ['reactify', 'babelify']
+      transform: [
+        'babelify',
+        'reactify'
+      ]
     },
     src: src + '/js/app.js',
     dest: dest + '/js',
@@ -124,8 +127,9 @@ function bundle() {
     .on('error', function(err) {
       gutil.log(
         gutil.colors.red('Error (Browserify):'), '\n',
-        err.description,
-        gutil.colors.cyan('file:', err.fileName, '| line', err.lineNumber)
+        // err.description,
+        // gutil.colors.cyan('file:', err.fileName, '| line', err.lineNumber)
+        err.message
       );
       gutil.beep();
       this.emit("end");

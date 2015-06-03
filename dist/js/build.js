@@ -1,10 +1,18 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
-var React = require('react');
-var ChatApp = require('./components/Chat.react');
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-React.render(React.createElement(ChatApp, null), document.getElementById('chatApp'));
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _componentsChatReact = require('./components/Chat.react');
+
+var _componentsChatReact2 = _interopRequireDefault(_componentsChatReact);
+
+_react2['default'].render(_react2['default'].createElement(_componentsChatReact2['default'], null), document.getElementById('chatApp'));
+
 
 },{"./components/Chat.react":164,"react":162}],2:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
@@ -5024,7 +5032,7 @@ if ("production" !== process.env.NODE_ENV) {
       if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
         console.debug(
           'Download the React DevTools for a better development experience: ' +
-          'http://fb.me/react-devtools'
+          'https://fb.me/react-devtools'
         );
       }
     }
@@ -5051,7 +5059,7 @@ if ("production" !== process.env.NODE_ENV) {
       if (!expectedFeatures[i]) {
         console.error(
           'One or more ES5 shim/shams expected by React are not available: ' +
-          'http://fb.me/react-warning-polyfills'
+          'https://fb.me/react-warning-polyfills'
         );
         break;
       }
@@ -5059,7 +5067,7 @@ if ("production" !== process.env.NODE_ENV) {
   }
 }
 
-React.version = '0.13.2';
+React.version = '0.13.3';
 
 module.exports = React;
 
@@ -6566,7 +6574,7 @@ var ReactClass = {
         ("production" !== process.env.NODE_ENV ? warning(
           this instanceof Constructor,
           'Something is calling a React component directly. Use a factory or ' +
-          'JSX instead. See: http://fb.me/react-legacyfactory'
+          'JSX instead. See: https://fb.me/react-legacyfactory'
         ) : null);
       }
 
@@ -6778,20 +6786,38 @@ ReactComponent.prototype.forceUpdate = function(callback) {
  */
 if ("production" !== process.env.NODE_ENV) {
   var deprecatedAPIs = {
-    getDOMNode: 'getDOMNode',
-    isMounted: 'isMounted',
-    replaceProps: 'replaceProps',
-    replaceState: 'replaceState',
-    setProps: 'setProps'
+    getDOMNode: [
+      'getDOMNode',
+      'Use React.findDOMNode(component) instead.'
+    ],
+    isMounted: [
+      'isMounted',
+      'Instead, make sure to clean up subscriptions and pending requests in ' +
+      'componentWillUnmount to prevent memory leaks.'
+    ],
+    replaceProps: [
+      'replaceProps',
+      'Instead, call React.render again at the top level.'
+    ],
+    replaceState: [
+      'replaceState',
+      'Refactor your code to use setState instead (see ' +
+      'https://github.com/facebook/react/issues/3236).'
+    ],
+    setProps: [
+      'setProps',
+      'Instead, call React.render again at the top level.'
+    ]
   };
-  var defineDeprecationWarning = function(methodName, displayName) {
+  var defineDeprecationWarning = function(methodName, info) {
     try {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
           ("production" !== process.env.NODE_ENV ? warning(
             false,
-            '%s(...) is deprecated in plain JavaScript React classes.',
-            displayName
+            '%s(...) is deprecated in plain JavaScript React classes. %s',
+            info[0],
+            info[1]
           ) : null);
           return undefined;
         }
@@ -7140,6 +7166,7 @@ var ReactCompositeComponentMixin = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
+    var childContext;
     var renderedElement;
 
     var previouslyMounting = ReactLifeCycle.currentlyMountingInstance;
@@ -7154,7 +7181,8 @@ var ReactCompositeComponentMixin = {
         }
       }
 
-      renderedElement = this._renderValidatedComponent();
+      childContext = this._getValidatedChildContext(context);
+      renderedElement = this._renderValidatedComponent(childContext);
     } finally {
       ReactLifeCycle.currentlyMountingInstance = previouslyMounting;
     }
@@ -7168,7 +7196,7 @@ var ReactCompositeComponentMixin = {
       this._renderedComponent,
       rootID,
       transaction,
-      this._processChildContext(context)
+      this._mergeChildContext(context, childContext)
     );
     if (inst.componentDidMount) {
       transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
@@ -7298,7 +7326,7 @@ var ReactCompositeComponentMixin = {
    * @return {object}
    * @private
    */
-  _processChildContext: function(currentContext) {
+  _getValidatedChildContext: function(currentContext) {
     var inst = this._instance;
     var childContext = inst.getChildContext && inst.getChildContext();
     if (childContext) {
@@ -7323,6 +7351,13 @@ var ReactCompositeComponentMixin = {
           name
         ) : invariant(name in inst.constructor.childContextTypes));
       }
+      return childContext;
+    }
+    return null;
+  },
+
+  _mergeChildContext: function(currentContext, childContext) {
+    if (childContext) {
       return assign({}, currentContext, childContext);
     }
     return currentContext;
@@ -7582,6 +7617,10 @@ var ReactCompositeComponentMixin = {
       return inst.state;
     }
 
+    if (replace && queue.length === 1) {
+      return queue[0];
+    }
+
     var nextState = assign({}, replace ? queue[0] : inst.state);
     for (var i = replace ? 1 : 0; i < queue.length; i++) {
       var partial = queue[i];
@@ -7651,13 +7690,14 @@ var ReactCompositeComponentMixin = {
   _updateRenderedComponent: function(transaction, context) {
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
-    var nextRenderedElement = this._renderValidatedComponent();
+    var childContext = this._getValidatedChildContext();
+    var nextRenderedElement = this._renderValidatedComponent(childContext);
     if (shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement)) {
       ReactReconciler.receiveComponent(
         prevComponentInstance,
         nextRenderedElement,
         transaction,
-        this._processChildContext(context)
+        this._mergeChildContext(context, childContext)
       );
     } else {
       // These two IDs are actually the same! But nothing should rely on that.
@@ -7673,7 +7713,7 @@ var ReactCompositeComponentMixin = {
         this._renderedComponent,
         thisID,
         transaction,
-        this._processChildContext(context)
+        this._mergeChildContext(context, childContext)
       );
       this._replaceNodeWithMarkupByID(prevComponentID, nextMarkup);
     }
@@ -7711,11 +7751,12 @@ var ReactCompositeComponentMixin = {
   /**
    * @private
    */
-  _renderValidatedComponent: function() {
+  _renderValidatedComponent: function(childContext) {
     var renderedComponent;
     var previousContext = ReactContext.current;
-    ReactContext.current = this._processChildContext(
-      this._currentElement._context
+    ReactContext.current = this._mergeChildContext(
+      this._currentElement._context,
+      childContext
     );
     ReactCurrentOwner.current = this;
     try {
@@ -8084,6 +8125,7 @@ var ReactDOM = mapObject({
 
   // SVG
   circle: 'circle',
+  clipPath: 'clipPath',
   defs: 'defs',
   ellipse: 'ellipse',
   g: 'g',
@@ -8235,11 +8277,13 @@ function assertValidProps(props) {
       'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
     ) : invariant(props.children == null));
     ("production" !== process.env.NODE_ENV ? invariant(
-      props.dangerouslySetInnerHTML.__html != null,
+      typeof props.dangerouslySetInnerHTML === 'object' &&
+      '__html' in props.dangerouslySetInnerHTML,
       '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-      'Please visit http://fb.me/react-invariant-dangerously-set-inner-html ' +
+      'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
       'for more information.'
-    ) : invariant(props.dangerouslySetInnerHTML.__html != null));
+    ) : invariant(typeof props.dangerouslySetInnerHTML === 'object' &&
+    '__html' in props.dangerouslySetInnerHTML));
   }
   if ("production" !== process.env.NODE_ENV) {
     ("production" !== process.env.NODE_ENV ? warning(
@@ -11045,7 +11089,7 @@ function warnAndMonitorForKeyUse(message, element, parentType) {
 
   ("production" !== process.env.NODE_ENV ? warning(
     false,
-    message + '%s%s See http://fb.me/react-warning-keys for more information.',
+    message + '%s%s See https://fb.me/react-warning-keys for more information.',
     parentOrOwnerAddendum,
     childOwnerAddendum
   ) : null);
@@ -15866,6 +15910,7 @@ var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
 
 var SVGDOMPropertyConfig = {
   Properties: {
+    clipPath: MUST_USE_ATTRIBUTE,
     cx: MUST_USE_ATTRIBUTE,
     cy: MUST_USE_ATTRIBUTE,
     d: MUST_USE_ATTRIBUTE,
@@ -15911,6 +15956,7 @@ var SVGDOMPropertyConfig = {
     y: MUST_USE_ATTRIBUTE
   },
   DOMAttributeNames: {
+    clipPath: 'clip-path',
     fillOpacity: 'fill-opacity',
     fontFamily: 'font-family',
     fontSize: 'font-size',
@@ -18723,6 +18769,7 @@ var shouldWrap = {
   // Force wrapping for SVG elements because if they get created inside a <div>,
   // they will be initialized in the wrong namespace (and will not display).
   'circle': true,
+  'clipPath': true,
   'defs': true,
   'ellipse': true,
   'g': true,
@@ -18765,6 +18812,7 @@ var markupWrap = {
   'th': trWrap,
 
   'circle': svgWrap,
+  'clipPath': svgWrap,
   'defs': svgWrap,
   'ellipse': svgWrap,
   'g': svgWrap,
@@ -20453,6 +20501,7 @@ var AppActions = {
 
 module.exports = AppActions;
 
+
 },{"../constants/AppConstants":173,"../dispatcher/AppDispatcher":174}],164:[function(require,module,exports){
 'use strict';
 
@@ -20465,18 +20514,31 @@ var AppActions = require('../actions/AppActions');
 
 var UserStore = require('../stores/UserStore');
 
-var Chat = React.createClass({ displayName: 'Chat',
+var Chat = React.createClass({
+  displayName: 'Chat',
+
   componentWillMount: function componentWillMount() {
     var userName = prompt('User name:');
     AppActions.addUser(userName);
   },
 
   render: function render() {
-    return React.createElement('div', { className: 'container chat' }, React.createElement('div', { className: 'row' }, React.createElement(MessagesSection, null), React.createElement(UsersSection, null), React.createElement(FormSection, { user: UserStore.getCurrentID() })));
+    return React.createElement(
+      'div',
+      { className: 'container chat' },
+      React.createElement(
+        'div',
+        { className: 'row' },
+        React.createElement(MessagesSection, null),
+        React.createElement(UsersSection, null),
+        React.createElement(FormSection, { user: UserStore.getCurrentID() })
+      )
+    );
   }
 });
 
 module.exports = Chat;
+
 
 },{"../actions/AppActions":163,"../stores/UserStore":177,"./FormSection/FormSection.react":165,"./MessagesSection/MessagesSection.react":170,"./UsersSection/UsersSection.react":172,"react":162}],165:[function(require,module,exports){
 'use strict';
@@ -20485,7 +20547,9 @@ var React = require('react');
 var AppActions = require('../../actions/AppActions');
 var GroupStore = require('../../stores/GroupStore');
 
-var FormSection = React.createClass({ displayName: 'FormSection',
+var FormSection = React.createClass({
+  displayName: 'FormSection',
+
   getInitialState: function getInitialState() {
     return {
       value: ''
@@ -20509,7 +20573,24 @@ var FormSection = React.createClass({ displayName: 'FormSection',
   },
 
   render: function render() {
-    return React.createElement('div', { className: 'col-sm-12 chat__form' }, React.createElement('div', { className: 'input-group' }, React.createElement('input', { type: 'text', value: this.state.value, onChange: this.handleChange, onKeyDown: this.handleKeyDown, className: 'form-control', placeholder: 'Mesaj' }), React.createElement('span', { className: 'input-group-btn' }, React.createElement('button', { onClick: this._sendMessage, className: 'btn btn-default', type: 'button' }, 'Gönder'))));
+    return React.createElement(
+      'div',
+      { className: 'col-sm-12 chat__form' },
+      React.createElement(
+        'div',
+        { className: 'input-group' },
+        React.createElement('input', { type: 'text', value: this.state.value, onChange: this.handleChange, onKeyDown: this.handleKeyDown, className: 'form-control', placeholder: 'Mesaj' }),
+        React.createElement(
+          'span',
+          { className: 'input-group-btn' },
+          React.createElement(
+            'button',
+            { onClick: this._sendMessage, className: 'btn btn-default', type: 'button' },
+            'Gönder'
+          )
+        )
+      )
+    );
   },
 
   _sendMessage: function _sendMessage() {
@@ -20529,13 +20610,16 @@ var FormSection = React.createClass({ displayName: 'FormSection',
 
 module.exports = FormSection;
 
+
 },{"../../actions/AppActions":163,"../../stores/GroupStore":175,"react":162}],166:[function(require,module,exports){
 'use strict';
 
 var React = require('react');
 var AppActions = require('../../actions/AppActions');
 
-var GroupItem = React.createClass({ displayName: 'GroupItem',
+var GroupItem = React.createClass({
+  displayName: 'GroupItem',
+
   handleClick: function handleClick(event) {
     event.preventDefault();
     this.props.clickGroup(this.key);
@@ -20549,11 +20633,20 @@ var GroupItem = React.createClass({ displayName: 'GroupItem',
   render: function render() {
     var active = this.props.activeGroup == this.props.group.id ? 'active' : '';
 
-    return React.createElement('li', { className: active }, React.createElement('a', { href: '#', onClick: this.clickGroup }, this.props.group.groupName));
+    return React.createElement(
+      'li',
+      { className: active },
+      React.createElement(
+        'a',
+        { href: '#', onClick: this.clickGroup },
+        this.props.group.groupName
+      )
+    );
   }
 });
 
 module.exports = GroupItem;
+
 
 },{"../../actions/AppActions":163,"react":162}],167:[function(require,module,exports){
 'use strict';
@@ -20563,7 +20656,9 @@ var GroupItem = require('./Group.react');
 var GroupStore = require('../../stores/GroupStore');
 var AppActions = require('../../actions/AppActions');
 
-var GroupsBox = React.createClass({ displayName: 'GroupsBox',
+var GroupsBox = React.createClass({
+  displayName: 'GroupsBox',
+
   getInitialState: function getInitialState() {
     return {
       groups: GroupStore.getAll()
@@ -20589,7 +20684,21 @@ var GroupsBox = React.createClass({ displayName: 'GroupsBox',
       return React.createElement(GroupItem, { key: group.id, group: group, clickGroup: this.clickGroup, activeGroup: GroupStore.getCurrentID() });
     }, this);
 
-    return React.createElement('ul', { className: 'nav nav-tabs nav-justified' }, groupListItems, React.createElement('li', null, React.createElement('a', { href: '#', onClick: this._addGroup }, React.createElement('i', { className: 'glyphicon glyphicon-plus' }), ' Grup ekle')));
+    return React.createElement(
+      'ul',
+      { className: 'nav nav-tabs nav-justified' },
+      groupListItems,
+      React.createElement(
+        'li',
+        null,
+        React.createElement(
+          'a',
+          { href: '#', onClick: this._addGroup },
+          React.createElement('i', { className: 'glyphicon glyphicon-plus' }),
+          ' Grup ekle'
+        )
+      )
+    );
   },
 
   _addGroup: function _addGroup(event) {
@@ -20601,23 +20710,41 @@ var GroupsBox = React.createClass({ displayName: 'GroupsBox',
 
 module.exports = GroupsBox;
 
+
 },{"../../actions/AppActions":163,"../../stores/GroupStore":175,"./Group.react":166,"react":162}],168:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
 
-var MessageItem = React.createClass({ displayName: "MessageItem",
+var MessageItem = React.createClass({
+  displayName: "MessageItem",
+
   getInitialState: function getInitialState() {
     return {
       message: this.props.message
     };
   },
   render: function render() {
-    return React.createElement("li", { href: "#", className: "list-group-item" }, React.createElement("h5", { className: "list-group-item-heading" }, this.props.user, ":"), React.createElement("p", { onClick: this.props.onEdit.bind(null, this), className: "list-group-item-text" }, this.state.message));
+    return React.createElement(
+      "li",
+      { href: "#", className: "list-group-item" },
+      React.createElement(
+        "h5",
+        { className: "list-group-item-heading" },
+        this.props.user,
+        ":"
+      ),
+      React.createElement(
+        "p",
+        { onClick: this.props.onEdit.bind(null, this), className: "list-group-item-text" },
+        this.state.message
+      )
+    );
   }
 });
 
 module.exports = MessageItem;
+
 
 },{"react":162}],169:[function(require,module,exports){
 'use strict';
@@ -20628,7 +20755,9 @@ var GroupStore = require('../../stores/GroupStore');
 var MessageStore = require('../../stores/MessageStore');
 var UserStore = require('../../stores/UserStore');
 
-var MessageList = React.createClass({ displayName: 'MessageList',
+var MessageList = React.createClass({
+  displayName: 'MessageList',
+
   getInitialState: function getInitialState() {
     return {
       messages: MessageStore.getAllForCurrentGroup()
@@ -20668,11 +20797,20 @@ var MessageList = React.createClass({ displayName: 'MessageList',
       return React.createElement(MessageItem, { key: message.id, user: UserStore.getForOne(message.authorID).userName, onEdit: this.handleEdit, message: message.text });
     }, this);
 
-    return React.createElement('div', { className: 'chat__messages' }, React.createElement('ul', { className: 'list-group' }, messageListItems));
+    return React.createElement(
+      'div',
+      { className: 'chat__messages' },
+      React.createElement(
+        'ul',
+        { className: 'list-group' },
+        messageListItems
+      )
+    );
   }
 });
 
 module.exports = MessageList;
+
 
 },{"../../stores/GroupStore":175,"../../stores/MessageStore":176,"../../stores/UserStore":177,"./Message.react":168,"react":162}],170:[function(require,module,exports){
 'use strict';
@@ -20681,26 +20819,46 @@ var React = require('react');
 var GroupList = require('./GroupList.react');
 var MessageList = require('./MessageList.react');
 
-var MessagesSection = React.createClass({ displayName: 'MessagesSection',
+var MessagesSection = React.createClass({
+  displayName: 'MessagesSection',
+
   render: function render() {
-    return React.createElement('div', { className: 'col-sm-8' }, React.createElement(GroupList, null), React.createElement(MessageList, null));
+    return React.createElement(
+      'div',
+      { className: 'col-sm-8' },
+      React.createElement(GroupList, null),
+      React.createElement(MessageList, null)
+    );
   }
 });
 
 module.exports = MessagesSection;
+
 
 },{"./GroupList.react":167,"./MessageList.react":169,"react":162}],171:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
 
-var UserItem = React.createClass({ displayName: "UserItem",
+var UserItem = React.createClass({
+  displayName: "UserItem",
+
   render: function render() {
-    return React.createElement("a", { href: "#", onClick: this.props.clickUser, className: "list-group-item /*list-group-item-warning*/" }, React.createElement("span", { className: "badge" }, "0"), this.props.name);
+    return React.createElement(
+      "a",
+      { href: "#", onClick: this.props.clickUser, className: "list-group-item /*list-group-item-warning*/" },
+      React.createElement(
+        "span",
+        { className: "badge" },
+        "0"
+      ),
+      this.props.name
+    );
   }
 });
 
 module.exports = UserItem;
+
 
 },{"react":162}],172:[function(require,module,exports){
 'use strict';
@@ -20709,7 +20867,9 @@ var React = require('react');
 var UserItem = require('./User.react');
 var UserStore = require('../../stores/UserStore');
 
-var UsersSection = React.createClass({ displayName: 'UsersSection',
+var UsersSection = React.createClass({
+  displayName: 'UsersSection',
+
   getInitialState: function getInitialState() {
     return {
       users: UserStore.getAll()
@@ -20735,11 +20895,37 @@ var UsersSection = React.createClass({ displayName: 'UsersSection',
       return React.createElement(UserItem, { key: user.id, name: user.userName });
     });
 
-    return React.createElement('div', { className: 'col-sm-4' }, React.createElement('div', { className: 'panel panel-default chat__users' }, React.createElement('div', { className: 'panel-heading' }, React.createElement('h3', { className: 'panel-title' }, 'Kullanıcılar:')), React.createElement('div', { className: 'panel-body' }, React.createElement('ul', { className: 'list-group' }, userListItems))));
+    return React.createElement(
+      'div',
+      { className: 'col-sm-4' },
+      React.createElement(
+        'div',
+        { className: 'panel panel-default chat__users' },
+        React.createElement(
+          'div',
+          { className: 'panel-heading' },
+          React.createElement(
+            'h3',
+            { className: 'panel-title' },
+            'Kullanıcılar:'
+          )
+        ),
+        React.createElement(
+          'div',
+          { className: 'panel-body' },
+          React.createElement(
+            'ul',
+            { className: 'list-group' },
+            userListItems
+          )
+        )
+      )
+    );
   }
 });
 
 module.exports = UsersSection;
+
 
 },{"../../stores/UserStore":177,"./User.react":171,"react":162}],173:[function(require,module,exports){
 'use strict';
@@ -20756,6 +20942,7 @@ module.exports = {
   REMOVE_USER: 'REMOVE_USER'
 };
 
+
 },{}],174:[function(require,module,exports){
 'use strict';
 
@@ -20771,12 +20958,15 @@ AppDispatcher.handleAction = function (action) {
 
 module.exports = AppDispatcher;
 
+
 },{"flux":4}],175:[function(require,module,exports){
 'use strict';
 
+var _events = require('events');
+
 var AppDispatcher = require('../dispatcher/AppDispatcher');
 var AppConstants = require('../constants/AppConstants');
-var EventEmitter = require('events').EventEmitter;
+
 var assign = require('object-assign');
 
 var CHANGE_EVENT = 'change';
@@ -20800,7 +20990,7 @@ var addGroup = function addGroup(groupName) {
   _groups[group.id] = group;
 };
 
-var GroupStore = assign({}, EventEmitter.prototype, {
+var GroupStore = assign({}, _events.EventEmitter.prototype, {
   addChangeListener: function addChangeListener(callback) {
     this.on(CHANGE_EVENT, callback);
   },
@@ -20851,6 +21041,7 @@ GroupStore.dispatchToken = AppDispatcher.register(function (payload) {
 });
 
 module.exports = GroupStore;
+
 
 },{"../constants/AppConstants":173,"../dispatcher/AppDispatcher":174,"events":2,"object-assign":7}],176:[function(require,module,exports){
 'use strict';
@@ -20928,6 +21119,7 @@ MessageStore.dispatchToken = AppDispatcher.register(function (payload) {
 
 module.exports = MessageStore;
 
+
 },{"../constants/AppConstants":173,"../dispatcher/AppDispatcher":174,"./GroupStore":175,"events":2,"object-assign":7}],177:[function(require,module,exports){
 'use strict';
 
@@ -20995,5 +21187,6 @@ UserStore.dispatchToken = AppDispatcher.register(function (payload) {
 });
 
 module.exports = UserStore;
+
 
 },{"../constants/AppConstants":173,"../dispatcher/AppDispatcher":174,"events":2,"object-assign":7}]},{},[1]);

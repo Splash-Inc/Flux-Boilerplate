@@ -1,6 +1,6 @@
 var AppDispatcher = require('../dispatcher/AppDispatcher');
 var AppConstants = require('../constants/AppConstants');
-var EventEmitter = require('events').EventEmitter;
+import {EventEmitter} from 'events';
 var assign = require('object-assign');
 
 var CHANGE_EVENT = 'change';

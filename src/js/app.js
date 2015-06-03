@@ -1,5 +1,5 @@
-var React = require('react');
-var ChatApp = require('./components/Chat.react');
+import React from 'react';
+import ChatApp from './components/Chat.react';
 
 React.render(
   <ChatApp />,
