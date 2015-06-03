@@ -8,15 +8,10 @@ var connect = require('gulp-connect');
 var sass = require('gulp-sass');
 var plumber = require('gulp-plumber');
 
-/**
- * Globals
- */
 var dest = './dist';
 var src = './src';
+var bundler;
 
-/**
- * Configs
- */
 var configs = {
   server: {
     root: dest,
@@ -42,9 +37,19 @@ var configs = {
     outputName: 'build.js',
     debug: gutil.env.type === 'devlopment'
   },
-  html: {
-    src: src + '/index.html',
-    dest: dest
+  copy: {
+    images: {
+      src: src + 'images/**/*',
+      dest: dest
+    },
+    fonts: {
+      src: src + 'fonts/**/*',
+      dest: dest
+    },
+    html: {
+      src: src + '/*.html',
+      dest: dest
+    }
   },
   watch: {
     src: 'src/**/*.*',
@@ -52,40 +57,28 @@ var configs = {
   }
 };
 
-// TODO: version parameter, minify css and js, compress images etc.
-
-/**
- * Gulp Default Task
- */
-// TODO: copy images, fonts vb.
 gulp.task('default', ['build', 'watch', 'server']);
 
-/**
- * Gulp Build Task
- */
-gulp.task('build', ['browserify', 'styles', 'html'], function() {
+// TODO: add version parameter, minify css and js, compress images etc.
+gulp.task('build', ['scripts', 'styles', 'copy'], function() {
   gulp.src(configs.watch.src)
       .pipe(connect.reload());
 });
 
-/**
- * Gulp Watch Task
- */
+// TODO: Create diffrent task for each watcher
 gulp.task('watch', ['build'], function() {
   gulp.watch(configs.watch.src, configs.watch.tasks);
+  return scripts(true);
 });
 
-/**
- * Gulp HTML Task
- */
-gulp.task('html', function() {
-  return gulp.src(configs.html.src)
-    .pipe(gulp.dest(configs.html.dest));
+gulp.task('copy', function() {
+    Object.keys(configs.copy).forEach(function(key) {
+      var copy = configs.copy[key];
+      gulp.src(copy.src)
+        .pipe(gulp.dest(copy.dest));
+    });
 });
 
-/**
- * Gulp Styles Task
- */
 gulp.task('styles', function() {
   gulp.src(configs.sass.src)
     .pipe(plumber())
@@ -94,47 +87,41 @@ gulp.task('styles', function() {
     .pipe(connect.reload());
 });
 
-/**
- * Gulp Server Task
- */
 gulp.task('server', function() {
   connect.server(configs.server);
 });
 
-/**
- * Browserify
- */
-
-// Development mode
-watchify.args.debug = watchify.args.fullPaths = configs.browserify.debug;
-
-var bundler = watchify(browserify(configs.browserify.src, watchify.args), {
-  poll: 200
+gulp.task('scripts', function() {
+  return scripts(false);
 });
 
-configs.browserify.settings.transform.forEach(function(t) {
-  bundler.transform(t);
-});
+function scripts(watching) {
+  var cfg = configs.browserify;
+  watchify.args.debug = watchify.args.fullPaths = cfg.debug;
+  bundler = browserify(cfg.src, watchify.args);
 
-// Browserify Task
-gulp.task('browserify', bundle);
+  if(watching)
+    bundler = watchify(bundler);
 
-// On Watchify Task
-bundler.on('update', bundle);
+  cfg.settings.transform.forEach(function(tansform) {
+    bundler.transform(tansform);
+  });
 
-function bundle() {
-  return bundler.bundle()
-    .on('error', function(err) {
-      gutil.log(
-        gutil.colors.red('Error (Browserify):'), '\n',
-        // err.description,
-        // gutil.colors.cyan('file:', err.fileName, '| line', err.lineNumber)
-        err.message
-      );
-      gutil.beep();
-      this.emit("end");
-    })
-    .pipe(source(configs.browserify.outputName))
-    .pipe(gulp.dest(configs.browserify.dest))
-    .pipe(connect.reload());
-}
+  var bundle = function() {
+    return bundler.bundle()
+      .on('error', function(err) {
+        gutil.log(gutil.colors.red('Error (Browserify):'), '\n',
+          err.message);
+        gutil.beep();
+        this.emit('end');
+      })
+      .pipe(source(cfg.outputName))
+      .pipe(gulp.dest(cfg.dest))
+      .pipe(connect.reload());
+  }
+
+  bundler.on('log', gutil.log);
+  bundler.on('update', bundle);
+
+  return bundle();
+};
