@@ -6,6 +6,7 @@ var browserify = require('browserify');
 var watchify = require('watchify');
 var connect = require('gulp-connect');
 var sass = require('gulp-sass');
+var plumber = require('gulp-plumber');
 
 /**
  * Globals
@@ -48,10 +49,7 @@ var configs = {
   }
 };
 
-/**
- * Gulp Production Task
- */
- // TODO: version parameter, minify css and js, compress images vb.
+// TODO: version parameter, minify css and js, compress images etc.
 
 /**
  * Gulp Default Task
@@ -87,6 +85,7 @@ gulp.task('html', function() {
  */
 gulp.task('styles', function() {
   gulp.src(configs.sass.src)
+    .pipe(plumber())
     .pipe(sass(configs.sass.settings))
     .pipe(gulp.dest(configs.sass.dest))
     .pipe(connect.reload());
@@ -123,10 +122,13 @@ bundler.on('update', bundle);
 function bundle() {
   return bundler.bundle()
     .on('error', function(err) {
-        gutil.log(gutil.colors.red('Error (Browserify): ',
-                  gutil.colors.magenta(err.message)));
-        gutil.beep();
-        this.emit('end');
+      gutil.log(
+        gutil.colors.red('Error (Browserify):'), '\n',
+        err.description,
+        gutil.colors.cyan('file:', err.fileName, '| line', err.lineNumber)
+      );
+      gutil.beep();
+      this.emit("end");
     })
     .pipe(source(configs.browserify.outputName))
     .pipe(gulp.dest(configs.browserify.dest))
