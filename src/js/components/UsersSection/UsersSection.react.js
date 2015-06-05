@@ -1,6 +1,6 @@
-var React = require('react');
-var UserItem = require('./User.react');
-var UserStore = require('../../stores/UserStore');
+import React from 'react';
+import UserItem from './User.react';
+import UserStore from '../../stores/UserStore';
 
 var UsersSection = React.createClass({
   getInitialState: function() {
@@ -34,7 +34,7 @@ var UsersSection = React.createClass({
       <div className="col-sm-4">
         <div className="panel panel-default chat__users">
           <div className="panel-heading">
-            <h3 className="panel-title">Kullanıcılar:</h3>
+            <h3 className="panel-title">Users:</h3>
           </div>
           <div className="panel-body">
             <ul className="list-group">

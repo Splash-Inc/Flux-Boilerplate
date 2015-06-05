@@ -22,7 +22,7 @@ var configs = {
     }
   },
   sass: {
-    src: src + '/styles/**/*.scss',
+    src: [src + '/**/*.scss', src + '/js/components/**/*.scss'],
     dest: dest + '/styles'
   },
   browserify: {

@@ -1,7 +1,7 @@
-var React = require('react');
-var GroupItem = require('./Group.react');
-var GroupStore = require('../../stores/GroupStore');
-var AppActions = require('../../actions/AppActions');
+import React from 'react';
+import GroupItem from './Group.react';
+import GroupStore from '../../stores/GroupStore';
+import AppActions from '../../actions/AppActions';
 
 var GroupsBox = React.createClass({
   getInitialState: function() {

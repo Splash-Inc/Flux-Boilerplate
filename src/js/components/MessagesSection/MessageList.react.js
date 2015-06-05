@@ -1,8 +1,8 @@
-var React = require('react');
-var MessageItem = require('./Message.react');
-var GroupStore = require('../../stores/GroupStore');
-var MessageStore = require('../../stores/MessageStore');
-var UserStore = require('../../stores/UserStore');
+import React from 'react';
+import MessageItem from './Message.react';
+import GroupStore from '../../stores/GroupStore';
+import MessageStore from '../../stores/MessageStore';
+import UserStore from '../../stores/UserStore';
 
 var MessageList = React.createClass({
   getInitialState: function() {

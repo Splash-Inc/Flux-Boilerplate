@@ -1,14 +1,14 @@
-var AppDispatcher = require('../dispatcher/AppDispatcher');
-var AppConstants = require('../constants/AppConstants');
+import AppDispatcher from '../dispatcher/AppDispatcher';
+import AppConstants from '../constants/AppConstants';
 import {EventEmitter} from 'events';
-var assign = require('object-assign');
+import assign from 'object-assign';
 
 var CHANGE_EVENT = 'change';
 
 var _groups = {
   0: {
     id: 'default',
-    groupName: 'first group'
+    groupName: 'First Group'
   }
 };
 var _currentID = 'default';

@@ -1,6 +1,6 @@
-var React = require('react');
-var AppActions = require('../../actions/AppActions');
-var GroupStore = require('../../stores/GroupStore');
+import React from 'react';
+import AppActions from '../../actions/AppActions';
+import GroupStore from '../../stores/GroupStore';
 
 var FormSection = React.createClass({
   getInitialState: function() {
@@ -31,7 +31,7 @@ var FormSection = React.createClass({
         <div className="input-group">
           <input type="text" value={this.state.value} onChange={this.handleChange} onKeyDown={this.handleKeyDown} className="form-control" placeholder="Mesaj" />
           <span className="input-group-btn">
-            <button onClick={this._sendMessage} className="btn btn-default" type="button">Gönder</button>
+            <button onClick={this._sendMessage} className="btn btn-default" type="button">Send</button>
           </span>
         </div>
       </div>

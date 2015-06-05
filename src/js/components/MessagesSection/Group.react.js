@@ -1,5 +1,5 @@
-var React = require('react');
-var AppActions = require('../../actions/AppActions');
+import React from 'react';
+import AppActions from '../../actions/AppActions';
 
 var GroupItem = React.createClass({
   handleClick: function(event) {

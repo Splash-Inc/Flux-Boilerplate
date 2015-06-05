@@ -1,6 +1,6 @@
-var React = require('react');
-var GroupList = require('./GroupList.react');
-var MessageList = require('./MessageList.react');
+import React from 'react';
+import GroupList from './GroupList.react';
+import MessageList from './MessageList.react';
 
 var MessagesSection = React.createClass({
   render: function() {

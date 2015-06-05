@@ -1,12 +1,9 @@
-var React = require('react');
-
-var MessagesSection = require('./MessagesSection/MessagesSection.react');
-var UsersSection = require('./UsersSection/UsersSection.react');
-var FormSection = require('./FormSection/FormSection.react');
-var AppActions = require('../actions/AppActions');
-
-var UserStore = require('../stores/UserStore');
-
+import React from 'react';
+import MessagesSection from './MessagesSection/MessagesSection.react';
+import UsersSection from './UsersSection/UsersSection.react';
+import FormSection from './FormSection/FormSection.react';
+import AppActions from '../actions/AppActions';
+import UserStore from '../stores/UserStore';
 
 var Chat = React.createClass({
   componentWillMount: function() {
